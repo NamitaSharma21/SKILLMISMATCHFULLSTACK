@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "react-router-dom": "^7.14.2"
+  },
+  "name": "skillmismacthreact",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NamitaSharma21/skillmismatchreact.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/NamitaSharma21/skillmismatchreact/issues"
+  },
+  "homepage": "https://github.com/NamitaSharma21/skillmismatchreact#readme"
+}

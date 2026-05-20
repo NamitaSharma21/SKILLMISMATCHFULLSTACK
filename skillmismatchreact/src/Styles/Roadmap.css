@@ -1,0 +1,64 @@
+.roadmap-container {
+  padding: 72px 24px 88px;
+  max-width: 1100px;
+  margin: auto;
+  text-align: center;
+}
+
+.roadmap-container h1 {
+  font-size: clamp(2.4rem, 3vw, 3.4rem);
+  margin-bottom: 10px;
+}
+
+.roadmap-container p {
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.roadmap-list {
+  display: grid;
+  gap: 18px;
+  margin: 36px auto 0;
+  max-width: 860px;
+}
+
+.roadmap-card {
+  background: var(--card);
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-left: 5px solid var(--accent);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.roadmap-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 28px 64px rgba(15, 23, 42, 0.14);
+}
+.save-btn {
+  margin-top: 32px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
+  border: none;
+  border-radius: var(--radius);
+
+  cursor: pointer;
+
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+}
+
+.save-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  opacity: 0.95;
+}
+
+.save-btn:active {
+  transform: translateY(0px);
+}

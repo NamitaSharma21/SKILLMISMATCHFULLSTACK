@@ -1,0 +1,89 @@
+.test-container {
+  padding: 50px 20px 80px;
+  max-width: 980px;
+  margin: auto;
+}
+
+.test-container h2 {
+  font-size: clamp(2rem, 3vw, 2.7rem);
+  margin-bottom: 24px;
+}
+
+/* QUESTION BOX */
+.question-card {
+  padding: 26px;
+  margin-bottom: 22px;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.question-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.14);
+}
+
+.question-card h4 {
+  margin: 0 0 16px;
+}
+
+/* OPTIONS GRID */
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+/* OPTION BUTTON (IMPORTANT: MATCHES JSX "option-btn") */
+.option-btn {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* SELECTED OPTION */
+.option-btn.active-option {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.7);
+  font-weight: 600;
+}
+
+/* SUBMIT BUTTON */
+.submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 46px rgba(56, 189, 248, 0.18);
+}
+
+/* ERROR TEXT */
+.error-text {
+  color: #ef4444;
+  margin-bottom: 10px;
+}
