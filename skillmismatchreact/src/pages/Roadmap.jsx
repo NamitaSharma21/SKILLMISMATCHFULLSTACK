@@ -1,143 +1,240 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Roadmap.css";
+import Navbar from "../components/Navbar";
 
 const Roadmap = () => {
   const navigate = useNavigate();
 
-  const course = localStorage.getItem("course");
-  const domain = localStorage.getItem("domain");
-  const score = Number(localStorage.getItem("score") || 0);
-  const maxScore = Number(localStorage.getItem("maxScore") || 5);
+  const course = localStorage.getItem("course") || "general";
+  const domain = localStorage.getItem("domain") || "general";
 
-  const [roadmap, setRoadmap] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const roadmapKey = `roadmap_${course}_${domain}`;
+
+  const [steps, setSteps] = useState([]);
+  const [progress, setProgress] = useState(0);
+
+  const [isSaved, setIsSaved] = useState(() => {
+    return !!localStorage.getItem(roadmapKey);
+  });
 
   useEffect(() => {
-    if (!course) {
-      navigate("/domain");
-      return;
-    }
-
-    const generateRoadmap = async () => {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-
-      if (!apiKey) {
-        setError("Missing API key");
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-
+    const loadRoadmap = async () => {
       try {
-        const res = await fetch(
-          "https://api.groq.com/openai/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: "llama-3.3-70b-versatile",
-              messages: [
-                {
-                  role: "user",
-                  content: `Give a learning roadmap for ${course} in ${domain}.
-User score: ${score}/${maxScore}.
+        const stored =
+          JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-Return like:
-Step 1: ...
-Step 2: ...
-Step 3: ...
-Step 4: ...
-Step 5: ...`,
-                },
-              ],
-            }),
+        let list = [];
+
+        // USE SAVED ROADMAP
+        if (stored?.steps?.length) {
+          list = stored.steps;
+        } else {
+          const res = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Generate a detailed learning roadmap for ${course} in ${domain}.
+
+Return ONLY a plain list of learning steps.
+
+Example:
+HTML Basics
+CSS Fundamentals
+JavaScript DOM
+React Hooks
+
+Do not write Basic, Intermediate, Advanced.
+Do not add headings.
+Do not explain anything.`,
+                  },
+                ],
+              }),
+            }
+          );
+
+          const data = await res.json();
+          const content = data?.choices?.[0]?.message?.content || "";
+
+          console.log("RAW AI RESPONSE:", content);
+
+          try {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed)) {
+              list = parsed;
+            }
+          } catch {
+            list = content
+              .split("\n")
+              .map((line) =>
+                line
+                  .replace(/^\d+\.\s*/g, "")
+                  .replace(/^[-•*]\s*/g, "")
+                  .replace(/"/g, "")
+                  .trim()
+              )
+              .filter(
+                (line) =>
+                  line.length > 3 &&
+                  !line.toLowerCase().includes("roadmap") &&
+                  !line.toLowerCase().includes("sure") &&
+                  !line.toLowerCase().includes("here") &&
+                  !line.toLowerCase().includes("basic") &&
+                  !line.toLowerCase().includes("intermediate") &&
+                  !line.toLowerCase().includes("advanced")
+              );
           }
-        );
 
-        const data = await res.json();
-        const content = data?.choices?.[0]?.message?.content;
+          // 🔥 FIX: SAVE DIRECTLY INTO SAME KEY (IMPORTANT CHANGE ONLY)
+          const existing =
+            JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-        if (!content) {
-          setError("No response from API");
-          return;
+          const dataToStore = {
+            steps: list,
+            completedSteps: existing.completedSteps || [],
+            unlockedSteps: existing.unlockedSteps || [],
+            scores: existing.scores || {},
+            progress: existing.progress || 0,
+          };
+
+          localStorage.setItem(
+            roadmapKey,
+            JSON.stringify(dataToStore)
+          );
         }
 
-        const steps = content
-          .split("\n")
-          .map((line) => line.replace(/^\d+\.\s*|Step \d+:\s*/i, "").trim())
-          .filter((line) => line.length > 0);
+        const initialStored =
+          JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-        setRoadmap(steps);
-      } catch (err) {
-        console.error(err);
-        setError("Network error");
-      } finally {
-        setLoading(false);
+        list = initialStored.steps || [];
+
+        console.log("FINAL ROADMAP LIST:", list);
+
+        if (!list.length) {
+          list = [
+            "Introduction",
+            "Core Concepts",
+            "Projects",
+            "Advanced Topics",
+          ];
+        }
+
+        const completed = initialStored.completedSteps || [];
+        const unlocked = initialStored.unlockedSteps || [];
+
+        const builtSteps = list.map((title, i) => {
+          let status = "locked";
+
+          if (i === 0) status = "active";
+
+          if (completed.includes(title)) {
+            status = "completed";
+          }
+
+          if (unlocked.includes(title)) {
+            status = "active";
+          }
+
+          return {
+            id: i + 1,
+            title,
+            status,
+          };
+        });
+
+        setSteps(builtSteps);
+
+        const percent = Math.round(
+          (completed.length / builtSteps.length) * 100
+        );
+
+        setProgress(percent || 0);
+      } catch (error) {
+        console.error("Roadmap Error:", error);
+
+        const fallback = [
+          "Introduction",
+          "Core Concepts",
+          "Projects",
+          "Advanced Topics",
+        ];
+
+        setSteps(
+          fallback.map((t, i) => ({
+            id: i + 1,
+            title: t,
+            status: i === 0 ? "active" : "locked",
+          }))
+        );
       }
     };
 
-    generateRoadmap();
-  }, [course, domain, score, maxScore, navigate]);
+    loadRoadmap();
+  }, [course, domain, roadmapKey]);
 
-  const saveRoadmap = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/save-roadmap", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: localStorage.getItem("userId"),
-          course,
-          domain,
-          score,
-          roadmap: roadmap.map((r) => r.toString().trim()).filter(Boolean),
-        }),
-      });
+  const saveRoadmap = () => {
+    const existing =
+      JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-      const data = await res.json();
-      console.log("RESPONSE:", data);
+    const data = {
+      steps: steps.map((s) => s.title),
+      completedSteps: existing.completedSteps || [],
+      unlockedSteps: existing.unlockedSteps || [],
+      scores: existing.scores || {},
+      progress: existing.progress || 0,
+    };
 
-      if (data.success) {
-        alert("Roadmap saved successfully!");
-      } else {
-        alert("Failed to save roadmap");
-      }
+    localStorage.setItem(roadmapKey, JSON.stringify(data));
 
-    } catch (err) {
-      console.log(err);
-      alert("Network error");
-    }
+    setIsSaved(true);
+  };
+
+  const handleClick = (step) => {
+    if (step.status === "locked") return;
+
+    navigate("/verification-test", {
+      state: { step: step.title },
+    });
   };
 
   return (
     <div className="roadmap-container">
-      <h2>Your Learning Roadmap</h2>
+      <Navbar />
 
-      <p>Course: {course}</p>
-      <p>Domain: {domain}</p>
-      <p>Score: {score}/{maxScore}</p>
+      <h2>{course} Roadmap</h2>
 
-      {loading && <p>Generating roadmap...</p>}
-      {error && <p className="error-text">{error}</p>}
+      <h3>Progress: {progress}%</h3>
 
-      {roadmap.map((step, i) => (
-        <div key={i} className="roadmap-card">
-          {step}
-        </div>
-      ))}
-
-      {roadmap.length > 0 && (
-        <button onClick={saveRoadmap} className="save-btn">
+      {!isSaved && (
+        <button className="save-btn" onClick={saveRoadmap}>
           Save Roadmap
         </button>
       )}
+
+      {isSaved && (
+        <p className="saved-text">Roadmap Saved ✔</p>
+      )}
+
+      <div className="roadmap-list">
+        {steps.map((s) => (
+          <div
+            key={s.id}
+            className={`roadmap-card ${s.status}`}
+            onClick={() => handleClick(s)}
+          >
+            {s.id}. {s.title}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,19 +1,20 @@
 :root {
-  --bg: #f6f9ff;
-  --card: rgba(255, 255, 255, 0.65);
-  --glass: rgba(255, 255, 255, 0.35);
+  --bg: #0f172a;
+  --card: rgba(15, 23, 42, 0.6);
+  --glass: rgba(15, 23, 42, 0.4);
 
-  --text: #0f172a;
-  --muted: #475569;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
 
   --accent: #38bdf8;
   --accent-dark: #0ea5e9;
 
-  --border: rgba(255, 255, 255, 0.55);
-  --shadow: 0 25px 70px rgba(15, 23, 42, 0.12);
-  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
 
-  --radius: 26px;
+  --shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  --radius: 18px;
   --transition: 0.3s ease;
 }
 
@@ -26,8 +27,9 @@ body,
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 35%),
-    linear-gradient(180deg, rgba(248, 250, 252, 1), rgba(226, 232, 240, 1));
+
+  background: linear-gradient(180deg, #0f172a, #0b1220);
+
   color: var(--text);
   line-height: 1.6;
 }

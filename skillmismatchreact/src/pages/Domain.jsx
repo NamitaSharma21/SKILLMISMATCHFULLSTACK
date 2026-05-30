@@ -30,7 +30,12 @@ const Domain = () => {
   const selectCourse = (course) => {
     localStorage.setItem("course", course.title);
     localStorage.setItem("domain", course.domain);
-    navigate("/test");
+
+    // 🔥 OLD: navigate("/test")
+    // ❌ removed test flow
+
+    // ✅ NEW FLOW: directly roadmap
+    navigate("/roadmap");
   };
 
   return (
@@ -39,7 +44,9 @@ const Domain = () => {
 
       <div className="domain-container">
         <h1>Select Your Course</h1>
-        <p>Choose a course to generate a question paper and personalized roadmap.</p>
+        <p>
+          Choose a course to generate your personalized roadmap.
+        </p>
 
         <div className="domain-grid">
           {courses.map((course) => (

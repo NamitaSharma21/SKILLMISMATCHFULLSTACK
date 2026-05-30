@@ -9,75 +9,66 @@ const Navbar = () => {
   const [dropdown, setDropdown] = useState(false);
 
   const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("score");
-    localStorage.removeItem("domain");
-    navigate("/login");
-  };
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
+
+  navigate("/login");
+};
 
   return (
     <nav className="navbar">
 
-      {/* Logo */}
+      {/* LOGO */}
       <div className="logo" onClick={() => navigate("/")}>
         Skill Mismatch Roadmap Generator
       </div>
 
-      {/* Links */}
       <div className="nav-links">
 
-        {/* Guest UI */}
+        {/* GUEST USER */}
         {!user ? (
           <>
-            <NavLink to="/login" className="btn">Login</NavLink>
-            <NavLink to="/signup" className="btn">Signup</NavLink>
+            <NavLink to="/login">Login</NavLink>
+            <NavLink to="/signup">Signup</NavLink>
           </>
         ) : (
           <>
-            {/* Main Links */}
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                isActive ? "active-link" : ""
-              }
-            >
-              Home
-            </NavLink>
+            {/* MAIN NAV */}
+            <NavLink to="/">Home</NavLink>
 
-            <NavLink
-              to="/domain"
-              className={({ isActive }) =>
-                isActive ? "active-link" : ""
-              }
-            >
-              Domain
-            </NavLink>
+            <NavLink to="/dashboard">Dashboard</NavLink>
 
-            <NavLink
-              to="/roadmap"
-              className={({ isActive }) =>
-                isActive ? "active-link" : ""
-              }
-            >
-              Roadmap
-            </NavLink>
+            <NavLink to="/roadmap">Roadmaps</NavLink>
 
-            {/* USER DROPDOWN */}
+            {/* PROFILE DROPDOWN */}
             <div className="user-menu">
+
               <span onClick={() => setDropdown(!dropdown)}>
                 👤 {user.name} ▾
               </span>
 
               {dropdown && (
                 <div className="dropdown">
-                  <p onClick={() => navigate("/roadmap")}>My Roadmap</p>
-                  <p onClick={() => navigate("/domain")}>Change Domain</p>
-                  <p onClick={logout}>Logout</p>
+
+                  <p onClick={() => navigate("/dashboard")}>
+                    My Dashboard
+                  </p>
+
+                  <p onClick={() => navigate("/roadmap")}>
+                    My Roadmaps
+                  </p>
+
+                  <p onClick={logout}>
+                    Logout
+                  </p>
+
                 </div>
               )}
+
             </div>
           </>
         )}
+
       </div>
     </nav>
   );
