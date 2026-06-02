@@ -18,20 +18,18 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`,
-        {
-          email,
-          password,
-        }
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        { email, password }
       );
-
-
-      alert(res.data.message);
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/");
+      window.dispatchEvent(new Event("authChange"));
 
+      alert(res.data.message);
+
+      navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }

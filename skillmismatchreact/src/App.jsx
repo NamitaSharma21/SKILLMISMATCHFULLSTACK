@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -9,7 +10,23 @@ import Dashboard from "./pages/Dashboard";
 import VerificationTest from "./pages/VerificationTest";
 
 function App() {
-  const isLoggedIn = !!localStorage.getItem("user");
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("user")
+  );
+
+  useEffect(() => {
+    const syncAuth = () => {
+      setIsLoggedIn(!!localStorage.getItem("user"));
+    };
+
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("authChange", syncAuth);
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("authChange", syncAuth);
+    };
+  }, []);
 
   return (
     <Routes>

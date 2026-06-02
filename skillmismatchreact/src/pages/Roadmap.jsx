@@ -6,17 +6,18 @@ import Navbar from "../components/Navbar";
 const Roadmap = () => {
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem("user")) || {};
   const course = localStorage.getItem("course") || "general";
   const domain = localStorage.getItem("domain") || "general";
 
-  const roadmapKey = `roadmap_${course}_${domain}`;
+  const roadmapKey = `roadmap_${user._id || user.email || "guest"}_${course}_${domain}`;
 
   const [steps, setSteps] = useState([]);
   const [progress, setProgress] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
 
-  const [isSaved, setIsSaved] = useState(() => {
-    return !!localStorage.getItem(roadmapKey);
-  });
+  const normalize = (v) =>
+    (v || "").toString().trim().toUpperCase();
 
   useEffect(() => {
     const loadRoadmap = async () => {
@@ -24,12 +25,9 @@ const Roadmap = () => {
         const stored =
           JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-        let list = [];
+        let list = stored.steps || [];
 
-        // USE SAVED ROADMAP
-        if (stored?.steps?.length) {
-          list = stored.steps;
-        } else {
+        if (!list.length) {
           const res = await fetch(
             "https://api.groq.com/openai/v1/chat/completions",
             {
@@ -44,18 +42,7 @@ const Roadmap = () => {
                   {
                     role: "user",
                     content: `Generate a detailed learning roadmap for ${course} in ${domain}.
-
-Return ONLY a plain list of learning steps.
-
-Example:
-HTML Basics
-CSS Fundamentals
-JavaScript DOM
-React Hooks
-
-Do not write Basic, Intermediate, Advanced.
-Do not add headings.
-Do not explain anything.`,
+Return ONLY a plain list of learning steps.`,
                   },
                 ],
               }),
@@ -65,82 +52,53 @@ Do not explain anything.`,
           const data = await res.json();
           const content = data?.choices?.[0]?.message?.content || "";
 
-          console.log("RAW AI RESPONSE:", content);
+          list = content
+            .split("\n")
+            .map((line) =>
+              line
+                .replace(/^\d+\.\s*/g, "")
+                .replace(/^[-•*]\s*/g, "")
+                .replace(/"/g, "")
+                .trim()
+            )
+            .filter((line) => line.length > 3);
 
-          try {
-            const parsed = JSON.parse(content);
-            if (Array.isArray(parsed)) {
-              list = parsed;
-            }
-          } catch {
-            list = content
-              .split("\n")
-              .map((line) =>
-                line
-                  .replace(/^\d+\.\s*/g, "")
-                  .replace(/^[-•*]\s*/g, "")
-                  .replace(/"/g, "")
-                  .trim()
-              )
-              .filter(
-                (line) =>
-                  line.length > 3 &&
-                  !line.toLowerCase().includes("roadmap") &&
-                  !line.toLowerCase().includes("sure") &&
-                  !line.toLowerCase().includes("here") &&
-                  !line.toLowerCase().includes("basic") &&
-                  !line.toLowerCase().includes("intermediate") &&
-                  !line.toLowerCase().includes("advanced")
-              );
-          }
-
-          // 🔥 FIX: SAVE DIRECTLY INTO SAME KEY (IMPORTANT CHANGE ONLY)
           const existing =
             JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-          const dataToStore = {
-            steps: list,
-            completedSteps: existing.completedSteps || [],
-            unlockedSteps: existing.unlockedSteps || [],
-            scores: existing.scores || {},
-            progress: existing.progress || 0,
-          };
-
           localStorage.setItem(
             roadmapKey,
-            JSON.stringify(dataToStore)
+            JSON.stringify({
+              steps: list,
+              completedSteps: existing.completedSteps || [],
+              unlockedSteps: existing.unlockedSteps || [],
+              scores: existing.scores || {},
+            })
           );
         }
 
-        const initialStored =
+        const finalData =
           JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-        list = initialStored.steps || [];
+        const completed = finalData.completedSteps || [];
+        const unlocked = finalData.unlockedSteps || [];
 
-        console.log("FINAL ROADMAP LIST:", list);
-
-        if (!list.length) {
-          list = [
-            "Introduction",
-            "Core Concepts",
-            "Projects",
-            "Advanced Topics",
-          ];
-        }
-
-        const completed = initialStored.completedSteps || [];
-        const unlocked = initialStored.unlockedSteps || [];
-
-        const builtSteps = list.map((title, i) => {
+        const builtSteps = (finalData.steps || []).map((title, i) => {
           let status = "locked";
 
-          if (i === 0) status = "active";
-
-          if (completed.includes(title)) {
+          if (
+            completed.some(
+              (c) => normalize(c) === normalize(title)
+            )
+          ) {
             status = "completed";
-          }
-
-          if (unlocked.includes(title)) {
+          } else if (
+            unlocked.some(
+              (u) => normalize(u) === normalize(title)
+            )
+          ) {
+            status = "active";
+          } else if (i === 0) {
             status = "active";
           }
 
@@ -154,27 +112,20 @@ Do not explain anything.`,
         setSteps(builtSteps);
 
         const percent = Math.round(
-          (completed.length / builtSteps.length) * 100
+          (completed.length / (builtSteps.length || 1)) * 100
         );
 
-        setProgress(percent || 0);
+        setProgress(percent);
+        setIsSaved(true);
       } catch (error) {
-        console.error("Roadmap Error:", error);
+        console.error(error);
 
-        const fallback = [
-          "Introduction",
-          "Core Concepts",
-          "Projects",
-          "Advanced Topics",
-        ];
-
-        setSteps(
-          fallback.map((t, i) => ({
-            id: i + 1,
-            title: t,
-            status: i === 0 ? "active" : "locked",
-          }))
-        );
+        setSteps([
+          { id: 1, title: "Introduction", status: "active" },
+          { id: 2, title: "Core Concepts", status: "locked" },
+          { id: 3, title: "Projects", status: "locked" },
+          { id: 4, title: "Advanced Topics", status: "locked" },
+        ]);
       }
     };
 
@@ -185,15 +136,13 @@ Do not explain anything.`,
     const existing =
       JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
-    const data = {
-      steps: steps.map((s) => s.title),
-      completedSteps: existing.completedSteps || [],
-      unlockedSteps: existing.unlockedSteps || [],
-      scores: existing.scores || {},
-      progress: existing.progress || 0,
-    };
-
-    localStorage.setItem(roadmapKey, JSON.stringify(data));
+    localStorage.setItem(
+      roadmapKey,
+      JSON.stringify({
+        ...existing,
+        steps: steps.map((s) => s.title),
+      })
+    );
 
     setIsSaved(true);
   };
@@ -214,13 +163,11 @@ Do not explain anything.`,
 
       <h3>Progress: {progress}%</h3>
 
-      {!isSaved && (
+      {!isSaved ? (
         <button className="save-btn" onClick={saveRoadmap}>
           Save Roadmap
         </button>
-      )}
-
-      {isSaved && (
+      ) : (
         <p className="saved-text">Roadmap Saved ✔</p>
       )}
 

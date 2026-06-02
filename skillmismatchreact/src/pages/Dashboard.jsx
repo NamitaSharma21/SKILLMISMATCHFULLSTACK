@@ -6,7 +6,9 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-
+      <h2 className="coming-soon">
+  🚧 Dashboard is under development
+    </h2>
       {/* LEFT SIDEBAR */}
       <div className="sidebar">
 

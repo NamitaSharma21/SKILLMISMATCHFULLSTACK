@@ -11,7 +11,9 @@ const VerificationTest = () => {
   const course = localStorage.getItem("course") || "general";
   const domain = localStorage.getItem("domain") || "general";
 
-  const roadmapKey = `roadmap_${course}_${domain}`;
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  const roadmapKey = `roadmap_${user._id || user.email || "guest"}_${course}_${domain}`;
 
   const normalize = (v) =>
     (v || "").toString().trim().toUpperCase();
@@ -20,7 +22,6 @@ const VerificationTest = () => {
   const [selected, setSelected] = useState({});
   const [score, setScore] = useState(null);
 
-  // LOAD QUESTIONS
   useEffect(() => {
     const loadQuestions = async () => {
       try {
@@ -59,13 +60,10 @@ Return ONLY JSON:
 
         const data = await res.json();
         const raw = data?.choices?.[0]?.message?.content || "";
-
         const json = raw.match(/\[[\s\S]*\]/);
 
         setQuestions(json ? JSON.parse(json[0]) : []);
-      } catch (error) {
-        console.error(error);
-
+      } catch {
         setQuestions([
           {
             question: `What is ${step}?`,
@@ -95,9 +93,7 @@ Return ONLY JSON:
     let s = 0;
 
     questions.forEach((q, i) => {
-      if (
-        normalize(selected[i]) === normalize(q.answer)
-      ) {
+      if (normalize(selected[i]) === normalize(q.answer)) {
         s++;
       }
     });
@@ -105,74 +101,58 @@ Return ONLY JSON:
     return s;
   };
 
-  // UPDATE ROADMAP (ONLY FIXED PART)
   const updateRoadmap = (finalScore) => {
     const existing =
       JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
     const data = {
+      steps: existing.steps || [],
       completedSteps: existing.completedSteps || [],
       unlockedSteps: existing.unlockedSteps || [],
       scores: existing.scores || {},
-      steps: existing.steps || [],
     };
 
     const pass = Math.ceil(questions.length * 0.6);
 
-    if (
-      finalScore >= pass &&
-      !data.completedSteps.includes(step)
-    ) {
+    if (finalScore >= pass && !data.completedSteps.includes(step)) {
       data.completedSteps.push(step);
     }
 
-    // 🔥 FIX: use SAME source as roadmap (NO separate generatedRoadmap)
-    const roadmapSteps = existing.steps || [];
+    const roadmapSteps = data.steps;
 
     const currentIndex = roadmapSteps.findIndex(
-      (s) =>
-        normalize(s) === normalize(step)
+      (s) => normalize(s) === normalize(step)
     );
 
     if (
+      finalScore >= pass &&
       currentIndex !== -1 &&
-      currentIndex + 1 < roadmapSteps.length
+      currentIndex < roadmapSteps.length - 1
     ) {
       const nextStep = roadmapSteps[currentIndex + 1];
 
-      if (
-        finalScore >= pass &&
-        !data.unlockedSteps.includes(nextStep)
-      ) {
+      if (!data.unlockedSteps.includes(nextStep)) {
         data.unlockedSteps.push(nextStep);
       }
     }
 
     data.scores[step] = finalScore;
 
-    localStorage.setItem(
-      roadmapKey,
-      JSON.stringify(data)
-    );
+    localStorage.setItem(roadmapKey, JSON.stringify(data));
   };
 
   const handleSubmit = () => {
-    try {
-      const finalScore = calculateScore();
+    const finalScore = calculateScore();
 
-      setScore(finalScore);
+    setScore(finalScore);
 
-      updateRoadmap(finalScore);
+    updateRoadmap(finalScore);
 
-      setSelected({});
+    setSelected({});
 
-      setTimeout(() => {
-        navigate("/roadmap");
-      }, 1000);
-    } catch (error) {
-      console.error(error);
+    setTimeout(() => {
       navigate("/roadmap");
-    }
+    }, 1000);
   };
 
   return (
@@ -183,19 +163,15 @@ Return ONLY JSON:
         <div key={i} className="question-box">
           <p>{q.question}</p>
 
-          {Object.entries(q.options || {}).map(
-            ([key, value]) => (
-              <button
-                key={key}
-                className={
-                  selected[i] === key ? "selected" : ""
-                }
-                onClick={() => handleSelect(i, key)}
-              >
-                {key}. {value}
-              </button>
-            )
-          )}
+          {Object.entries(q.options || {}).map(([key, value]) => (
+            <button
+              key={key}
+              className={selected[i] === key ? "selected" : ""}
+              onClick={() => handleSelect(i, key)}
+            >
+              {key}. {value}
+            </button>
+          ))}
         </div>
       ))}
 
