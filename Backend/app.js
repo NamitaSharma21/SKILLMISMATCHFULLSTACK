@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-
+require('dotenv').config();
 const app = express();
 
 
@@ -22,8 +22,14 @@ app.use('/api/auth', authRoutes);
 const roadmapRoutes = require('./routes/roadmap');
 app.use('/api', roadmapRoutes);
 
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('Missing MONGO_URI in Backend/.env. Add MONGO_URI=<your-connection-string> and restart the server.');
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(mongoUri)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
