@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../Styles/Home.css";
 import Navbar from "../components/Navbar";
+import skillldev from "../assets/skillldev.webp";
 
 const Home = () => {
   return (
@@ -26,7 +27,7 @@ const Home = () => {
 
           <div className="hero-image">
             <img
-              src="/src/assets/skillldev.webp"
+              src={skillldev}
               alt="roadmap"
             />
           </div>
