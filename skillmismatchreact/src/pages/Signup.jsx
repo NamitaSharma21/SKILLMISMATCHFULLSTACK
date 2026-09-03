@@ -10,6 +10,8 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showWaitPopup, setShowWaitPopup] = useState(false);
+
   const handleSignup = async (e) => {
     e.preventDefault();
 
@@ -19,6 +21,14 @@ const Signup = () => {
     }
 
     try {
+      // Show wait popup
+      setShowWaitPopup(true);
+
+      // Automatically hide popup after 2 seconds
+      setTimeout(() => {
+        setShowWaitPopup(false);
+      }, 2000);
+
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`,
         {
           username,
@@ -31,6 +41,8 @@ const Signup = () => {
       navigate("/login");
 
     } catch (err) {
+      setShowWaitPopup(false);
+
       alert(err.response?.data?.message || "Signup failed");
     }
   };
@@ -67,6 +79,20 @@ const Signup = () => {
       <p>
         Already have an account? <Link to="/login">Login</Link>
       </p>
+
+      {/* WAIT POPUP */}
+      {showWaitPopup && (
+        <div className="wait-overlay">
+          <div className="wait-popup">
+            <div className="loader"></div>
+
+            <h3>Please Wait...</h3>
+
+            <p>Creating your account</p>
+            <p>Getting things ready for you... This may take a few seconds.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

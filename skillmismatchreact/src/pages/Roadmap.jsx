@@ -22,6 +22,13 @@ const Roadmap = () => {
   useEffect(() => {
     const loadRoadmap = async () => {
       try {
+          localStorage.setItem(
+          "lastUsedRoadmap",
+          JSON.stringify({
+            course,
+            domain,
+          })
+        );
         const stored =
           JSON.parse(localStorage.getItem(roadmapKey)) || {};
 
